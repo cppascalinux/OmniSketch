@@ -361,13 +361,13 @@ public:
 namespace OmniSketch::Test {
 
 #define DEFINE_TIMERS                                                          \
-  auto timer = std::chrono::microseconds::zero();                              \
+  auto timer = std::chrono::nanoseconds::zero();                              \
   auto tick = std::chrono::steady_clock::now();                                \
   auto tock = std::chrono::steady_clock::now();
 #define START_TIMER tick = std::chrono::steady_clock::now();
 #define STOP_TIMER                                                             \
   tock = std::chrono::steady_clock::now();                                     \
-  timer += std::chrono::duration_cast<std::chrono::microseconds>(tock - tick);
+  timer += std::chrono::duration_cast<std::chrono::nanoseconds>(tock - tick);
 #define TIMER_RESULT static_cast<int64_t>(timer.count())
 
 template <int32_t key_len, typename T> void TestBase<key_len, T>::runTest() {
@@ -527,7 +527,7 @@ void TestBase<key_len, T>::testInsert(
     STOP_TIMER;
   }
   if (metric_vec.in(Metric::RATE)) {
-    insert[Metric::RATE] = 1.0 * (end - begin) / TIMER_RESULT * 1e6;
+    insert[Metric::RATE] = 1.0 * (end - begin) / TIMER_RESULT * 1e9;
   }
 }
 
@@ -548,7 +548,7 @@ void TestBase<key_len, T>::testUpdate(
     STOP_TIMER;
   }
   if (metric_vec.in(Metric::RATE))
-    update[Metric::RATE] = 1.0 * (end - begin) / TIMER_RESULT * 1e6;
+    update[Metric::RATE] = 1.0 * (end - begin) / TIMER_RESULT * 1e9;
 }
 
 template <int32_t key_len, typename T>
@@ -584,7 +584,7 @@ void TestBase<key_len, T>::testQuery(
   }
   // add statistics
   if (metric_vec.in(Metric::RATE)) {
-    query[Metric::RATE] = 1.0 * gnd_truth.size() / TIMER_RESULT * 1e6;
+    query[Metric::RATE] = 1.0 * gnd_truth.size() / TIMER_RESULT * 1e9;
   }
   if (metric_vec.in(Metric::ARE)) {
     query[Metric::ARE] = ARE / gnd_truth.size();
@@ -630,7 +630,7 @@ void TestBase<key_len, T>::testLookup(
   }
   // add statistics
   if (metric_vec.in(Metric::RATE)) {
-    lookup[Metric::RATE] = 1.0 * gnd_truth.size() / TIMER_RESULT * 1e6;
+    lookup[Metric::RATE] = 1.0 * gnd_truth.size() / TIMER_RESULT * 1e9;
   }
   if (metric_vec.in(Metric::TP)) {
     lookup[Metric::TP] = TP / gnd_truth.size();

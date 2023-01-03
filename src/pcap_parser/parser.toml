@@ -10,7 +10,7 @@ flow_count = 100000
 filter = "ip && (tcp || udp)"
 
 # Input pcap file
-input = "../../OmniSketch_Ori/data/data-900K.pcap"
+input = "../data/4SICS-GeekLounge-151022.pcap"
 
 # (Conditionally Optional) Output pcap file
 #   If mode != "null", this is a must.

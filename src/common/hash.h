@@ -9,6 +9,7 @@
 #pragma once
 
 #include "flowkey.h"
+#include <ctime>
 
 /**
  * @brief Warehouse of hashing classes

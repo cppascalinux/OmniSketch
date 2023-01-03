@@ -9,6 +9,7 @@
 #include "test_factory.h"
 #include <common/flowkey.h>
 #include <unordered_map>
+#include <limits>
 
 /**
  * @cond TEST
