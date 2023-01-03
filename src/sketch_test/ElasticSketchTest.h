@@ -1,5 +1,5 @@
 /**
- * @file CMSketchTest.h
+ * @file ElasticSketchTest.h
  * @author dromniscience (you@domain.com)
  * @brief Test Count Min Sketch
  *
@@ -17,7 +17,7 @@
 
 
 #define checkarg(var,name) do{\
-  if (!parser.parseConfig())\
+  if (!parser.parseConfig(var,name))\
     return;\
 }while(0)
 
@@ -28,7 +28,7 @@ namespace OmniSketch::Test {
  *
  */
 template <int32_t key_len, typename T, typename hash_t = Hash::AwareHash>
-class ElSketchTest : public TestBase<key_len, T> {
+class ElasticSketchTest : public TestBase<key_len, T> {
   using TestBase<key_len, T>::config_file;
 
 public:
@@ -40,8 +40,8 @@ public:
    * - path to the node that contains metrics of interest (concatenated with
    * '.')
    */
-  ELSketchTest(const std::string_view config_file)
-      : TestBase<key_len, T>("Elastic Sketch", config_file, EL_TEST_PATH) {}
+  ElasticSketchTest(const std::string_view config_file)
+      : TestBase<key_len, T>("Elastic Sketch", config_file, ES_TEST_PATH) {}
 
   /**
    * @brief Test Elastic Filter
@@ -61,7 +61,7 @@ public:
 namespace OmniSketch::Test {
 
 template <int32_t key_len, typename T, typename hash_t>
-void CMSketchTest<key_len, T, hash_t>::runTest() {
+void ElasticSketchTest<key_len, T, hash_t>::runTest() {
   /**
    * @brief shorthand for convenience
    *
@@ -76,6 +76,7 @@ void CMSketchTest<key_len, T, hash_t>::runTest() {
   int32_t num_heavy_packet, num_heavy_size;   // sketch config
   int32_t num_light_packet, num_light_size;   // sketch config
   int32_t thre_eject, thre_elephant;          // sketch config
+  double threshold_heavy_hitter;
 
   std::string data_file; // data config
   toml::array arr;       // shortly we will convert it to format
@@ -98,6 +99,7 @@ void CMSketchTest<key_len, T, hash_t>::runTest() {
   /// Step vi. Parse data and format
   checkarg(data_file, "data");
   checkarg(arr, "format");
+  checkarg(threshold_heavy_hitter, "threshold_heavy_hitter");
   Data::DataFormat format(arr); // conver from toml::array to Data::DataFormat
   /// [Optional] User-defined rules
   ///
@@ -119,8 +121,8 @@ void CMSketchTest<key_len, T, hash_t>::runTest() {
   ///
   /// Step i. Initialize a sketch
   std::unique_ptr<Sketch::SketchBase<key_len, T>> ptr(
-    new Sketch::ElasticSketch<key_len, num_heavy_size, num_light_size, T, hash_t>
-      (num_heavy_packet, num_light_packet, thre_eject, thre_elephant));
+    new Sketch::ElasticSketch<key_len, T, hash_t>
+      (num_heavy_packet, num_light_packet, num_heavy_size, num_light_size, thre_eject, thre_elephant));
   /// remember that the left ptr must point to the base class in order to call
   /// the methods in it
 
@@ -133,7 +135,7 @@ void CMSketchTest<key_len, T, hash_t>::runTest() {
   Data::GndTruth<key_len, T> gnd_truth;
   gnd_truth.getGroundTruth(data.begin(), data.end(), cnt_method);
   Data::GndTruth<key_len, T> gnd_truth_heavy_hitters;
-  gnd_truth_heavy_hitters.getHeavyHitter(gnd_truth, num_heavy_hitter,
+  gnd_truth_heavy_hitters.getHeavyHitter(gnd_truth, threshold_heavy_hitter,
                                          hx_method);
   ///       2. [optional] show data info
   fmt::print("DataSet: {:d} records with {:d} keys ({})\n", data.size(),
@@ -154,7 +156,7 @@ void CMSketchTest<key_len, T, hash_t>::runTest() {
         gnd_truth_heavy_hitters); // metrics of interest are in config file
   } else {
     this->testHeavyHitter(
-        ptr, std::floor(gnd_truth.totalValue() * num_heavy_hitter + 1),
+        ptr, std::floor(gnd_truth.totalValue() * threshold_heavy_hitter + 1),
         gnd_truth_heavy_hitters); // gnd_truth_heavy_hitter: >, yet HashPipe: >=
   }
   ///        5. show metrics

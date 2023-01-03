@@ -124,3 +124,6 @@ add_user_sketch(FR FlowRadar)
 
 # Counting Bloom Filter
 add_user_sketch(CBF CountingBloomFilter)
+
+# Elastic Sketch
+add_user_sketch(ES ElasticSketch)
