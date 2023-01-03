@@ -46,9 +46,9 @@
   no_hash = [3]
   
 
-[EL] # ElasticSketch
+[ES] # ElasticSketch
 
-  [EL.para]
+  [ES.para]
   num_heavy_packet = 8
   num_light_packet = 8192
   num_heavy_size = 4
@@ -56,19 +56,19 @@
   thre_elephant = 1000
   thre_eject = 8
 
-  [EL.data]
+  [ES.data]
   cnt_method = "InPacket"
   hx_method = "TopK"
   threshold_heavy_hitter = 300
   data = "../data/records.bin"
   format = [["flowkey", "padding", "timestamp", "length", "padding"], [13, 3, 8, 2, 6]]
 
-  [EL.test]
+  [ES.test]
   update = ["RATE"]
   query = ["RATE", "ARE", "AAE"]
   heavyhitter = ["TIME", "ARE", "PRC", "RCL"]
 
-  [EL.ch]
+  [ES.ch]
   cnt_no_ratio = 0.3
   width_cnt = [10, 7]
   no_hash = [3]

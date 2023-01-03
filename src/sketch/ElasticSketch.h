@@ -55,31 +55,27 @@ class heavypacket_t{
     T v_positive;
     T v_light;
     const FlowKey<key_len> *flowkey;
-    int8_t setup;
-    heavypacket_t():setup(0){}
+    heavypacket_t():v_positive(0),v_light(0),flowkey(0){}
     heavypacket_t(T __v_positive, T __v_light, const FlowKey<key_len> *__flowkey):
-        v_positive(__v_positive),v_light(__v_light),flowkey(__flowkey), setup(1){}
+        v_positive(__v_positive),v_light(__v_light),flowkey(__flowkey){}
 };
 template <int32_t key_len, typename T, typename hash_t = Hash::AwareHash>
 class heavybucket_t{
   public:
     heavypacket_t<key_len, T> *packet;
     T v_negative;
-    heavybucket_t(){}
-    heavybucket_t(int32_t h_size){
-      packet = new heavypacket_t<key_len, T> [h_size];
-    }
+
+    heavybucket_t():packet(0),v_negative(0){}
     ~heavybucket_t(){
-      delete [] packet;
+      if(packet)
+        delete [] packet;
     }
     heavypacket_t<key_len, T>& lookup_packet(const FlowKey<key_len> &flowkey,
-        const hash_t &hs, int32_t h_size, int n_h_packet, int index)const{
+    const hash_t &hs, int32_t h_size, int n_h_packet, int index)const{
       for (int i = 0; i < h_size; i++){
-        if (*packet[i].flowkey == flowkey)
+        if (!packet[i].flowkey)
           return packet[i];
-      }
-      for (int i = 0; i < h_size; i++){
-        if (packet[i].setup == 0)
+        else if (*packet[i].flowkey == flowkey)
           return packet[i];
         else if (hs(*packet[i].flowkey) % n_h_packet != index)
           return packet[i];
@@ -130,10 +126,17 @@ private:
 private:
   void realloc_heavy(){
     heavybucket_t<key_len, T, hash_t>* new_mem;
-    new_mem = new heavybucket_t<key_len, T, hash_t> [2 * n_h_packet];
-    size_t size_heavy = sizeof(heavybucket_t<key_len, T, hash_t>) * n_h_packet;
-    memcpy(new_mem, heavy, size_heavy);
-    memcpy(new_mem + n_h_packet, heavy, size_heavy);
+    new_mem = new heavybucket_t<key_len, T, hash_t> [2 * n_h_packet]();
+    for(int i = 0; i < n_h_packet; i++) {
+      new_mem[i].packet = new heavypacket_t<key_len, T>[h_size]();
+      new_mem[i].v_negative = heavy[i].v_negative;
+      memcpy(new_mem[i].packet, heavy[i].packet, sizeof(heavypacket_t<key_len, T>) * h_size);
+
+
+      new_mem[i + n_h_packet].packet = new heavypacket_t<key_len, T>[h_size]();
+      new_mem[i + n_h_packet].v_negative = heavy[i].v_negative;
+      memcpy(new_mem[i + n_h_packet].packet, heavy[i].packet, sizeof(heavypacket_t<key_len, T>) * h_size);
+    }
     delete[] heavy;
     heavy = new_mem;
     n_h_packet *= 2;
@@ -151,9 +154,8 @@ private:
   }
   T querySize(const FlowKey<key_len> &flowkey)const{
     int32_t h_index = hash_h_fns[0](flowkey) % n_h_packet;
-    heavypacket_t<key_len, T> &ptr = heavy[h_index].
-        lookup_packet(flowkey, hash_h_fns[0], h_size, n_h_packet, h_index);
-    if (ptr.setup == 0)
+    heavypacket_t<key_len, T> &ptr = heavy[h_index].lookup_packet(flowkey, hash_h_fns[0], h_size, n_h_packet, h_index);
+    if (!ptr.flowkey)
       return 0;
     else{
       int32_t result = 0;
@@ -252,7 +254,10 @@ ElasticSketch<key_len, T, hash_t>::ElasticSketch(int32_t num_h_packet, int32_t n
   hash_l_fns = new hash_t[l_size];
   hash_h_fns = new hash_t[1];
   allocMem(l_size, n_l_packet, light);
-  heavy = new heavybucket_t<key_len, T>[n_h_packet];
+  heavy = new heavybucket_t<key_len, T>[n_h_packet]();
+  for(int i = 0; i < n_h_packet; i++){
+    heavy[i].packet = new heavypacket_t<key_len, T>[h_size]();
+  }
   thre_n_elephant = ((n_h_packet + 2) / 3) * ((h_size + 1) / 2); 
 }
 
@@ -268,17 +273,17 @@ template <int32_t key_len, typename T, typename hash_t>
 void ElasticSketch<key_len, T, hash_t>::update(const FlowKey<key_len> &flowkey, T value){
   int32_t h_index = hash_h_fns[0](flowkey) % n_h_packet;
   heavypacket_t<key_len, T> &ptr = heavy[h_index].lookup_packet(flowkey, hash_h_fns[0], h_size, n_h_packet, h_index);
-  if (*ptr.flowkey == flowkey){
+  if (!ptr.flowkey){
+    // not setup
+    ptr = heavypacket_t<key_len, T>(value, 0, &flowkey);
+    if (ptr.v_positive + ptr.v_light >= thre_elephant)
+      ++n_elephant;
+  }
+  else if (*ptr.flowkey == flowkey){
     //positive vote
     if (ptr.v_positive + ptr.v_light >= thre_elephant)
       --n_elephant;
     ptr.v_positive += value;
-    if (ptr.v_positive + ptr.v_light >= thre_elephant)
-      ++n_elephant;
-  }
-  else if (ptr.setup == 0){
-    // not setup
-    ptr = heavypacket_t<key_len, T>(value, 0, &flowkey);
     if (ptr.v_positive + ptr.v_light >= thre_elephant)
       ++n_elephant;
   }
@@ -317,7 +322,7 @@ template <int32_t key_len, typename T, typename hash_t>
 void ElasticSketch<key_len, T, hash_t>::update_quick(const FlowKey<key_len> &flowkey, T value){
   int32_t h_index = hash_h_fns[0](flowkey) % n_h_packet;
   heavypacket_t<key_len, T> &ptr = heavy[h_index].lookup_packet(flowkey, n_h_packet, h_index);
-  if (ptr.setup == 0){
+  if (!ptr.flowkey){
     // not setup
     // ignore elephant check because threshold >> 1
     ptr = heavypacket_t<key_len, T>(value, 0, &flowkey);
@@ -384,7 +389,7 @@ Data::Estimation<key_len, T> ElasticSketch<key_len, T, hash_t>::getHeavyHitter(d
   Data::Estimation<key_len, T> result;
   for (int i = 0; i < n_h_packet; i++)
     for (int j = 0; j < h_size; j++)
-      if (heavy[i].packet[j].setup == 0)
+      if (!heavy[i].packet[j].flowkey)
         break;
       else{
         T value = querySize(*heavy[i].packet[j].flowkey);
