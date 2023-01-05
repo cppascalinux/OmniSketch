@@ -49,8 +49,8 @@
 [ES] # ElasticSketch
 
   [ES.para]
-  num_heavy_packet = 8
-  num_light_packet = 8192
+  num_heavy_packet = 5000
+  num_light_packet = 80001
   num_heavy_size = 4
   num_light_size = 3
   thre_elephant = 1000

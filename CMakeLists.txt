@@ -9,7 +9,7 @@ project(${TOP_PROJECT_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
 # To disable warnings in common/toml.h on a few c++20 compiler flags
-set(CMAKE_CXX_FLAGS "-Wno-unknown-warning-option -Wno-deprecated-declarations -fsanitize=address")
+set(CMAKE_CXX_FLAGS "-Wno-unknown-warning-option -Wno-deprecated-declarations")
 
 # ---- Python Components ----
 
