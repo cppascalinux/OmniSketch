@@ -305,7 +305,7 @@ void ElasticSketch<key_len, T, hash_t>::update(const FlowKey<key_len> &flowkey, 
     heavy[h_index].v_negative += value;
     if (heavy[h_index].v_negative > ptr.v_positive * thre_eject){
       //negative vote: eject current
-      updateLight(flowkey, ptr.v_positive);
+      updateLight(*ptr.flowkey, ptr.v_positive);
       if (ptr.v_positive + ptr.v_light >= thre_elephant)
         --n_elephant;
       ptr = heavypacket_t<key_len, T>(value, queryLightSize(flowkey), &flowkey);
