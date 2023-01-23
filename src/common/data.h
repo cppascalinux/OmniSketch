@@ -956,7 +956,12 @@ void GndTruth<key_len, T>::getHeavyHitter(const GndTruth &flow_summary,
     auto size = flow_summary.my_map.size();
     size_t no = std::min(size, static_cast<size_t>(threshold));
     auto ptr = flow_summary.my_map.right.begin();
-    for (int i = 0; i < no; ++i, ptr++) {
+    auto lst = ptr;
+    for (int i = 0;; ++i, lst = ptr, ptr++) {
+      if (i >= size)
+        break;
+      if (i >= no && ptr->get_right() != lst->get_right())
+        break;
       my_map.right.push_back(*ptr);
       tot_value += ptr->get_right();
     }

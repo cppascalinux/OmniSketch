@@ -66,7 +66,7 @@
   [ES.test]
   update = ["RATE"]
   query = ["RATE", "ARE", "AAE"]
-  heavyhitter = ["TIME", "ARE", "PRC", "RCL"]
+  heavyhitter = ["TIME", "ARE", "PRC", "RCL", "F1"]
 
   [ES.ch]
   cnt_no_ratio = 0.3
@@ -88,7 +88,7 @@
 
   [HP.test]
   update = ["RATE"]
-  heavyhitter = ["TIME", "ARE", "PRC", "RCL"]
+  heavyhitter = ["TIME", "ARE", "PRC", "RCL", "F1"]
 
 [FlowRadar] # Flow Radar
 
