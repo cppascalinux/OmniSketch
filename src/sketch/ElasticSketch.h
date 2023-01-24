@@ -425,8 +425,8 @@ int32_t ElasticSketch<key_len, T, hash_t>::compress(int32_t new_num_l_packet, bo
   lightpacket_t** new_mem;
   allocMem(l_size, new_num_l_packet, new_mem);
   for (int i = 0; i < l_size; i++){
-    lightpacket_t* arr_old = light[i]();
-    lightpacket_t* arr_new = new_mem[i]();
+    lightpacket_t* arr_old = light[i];
+    lightpacket_t* arr_new = new_mem[i];
     memcpy(arr_new, arr_old, sizeof(lightpacket_t) * new_num_l_packet);
     int round = n_l_packet / new_num_l_packet;
     for (int j = 1; j < round; j++){
