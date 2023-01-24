@@ -14,7 +14,7 @@
 #include <common/hash.h>
 #include <common/sketch.h>
 
-#define lightpacket_t T
+#define lightpacket_t uint8_t
 #define SKETCH_INF (~((T)0))
 #define MOD 1000000007
 
@@ -146,8 +146,8 @@ private:
     n_h_packet *= 2;
     thre_n_elephant = ((n_h_packet + 2) / 3) * ((h_size + 1) / 2); 
   }
-  T queryLightSize(const FlowKey<key_len> &flowkey)const{
-    T minimum = 0;
+  lightpacket_t queryLightSize(const FlowKey<key_len> &flowkey)const{
+    lightpacket_t minimum = 0;
     int l_index = hash_l_fns[0](flowkey) % n_l_packet;
     minimum = light[0][l_index];
     for (int i = 1; i < l_size; i++){
@@ -166,10 +166,10 @@ private:
       if (*ptr.flowkey == flowkey)
         return ptr.v_positive + ptr.v_light;
       else
-        return queryLightSize(flowkey);
+        return (T)((uint32_t)(queryLightSize(flowkey)))
     }
   }
-  void updateLight(const FlowKey<key_len> &flowkey, T num){
+  void updateLight(const FlowKey<key_len> &flowkey, lightpacket_t num){
     for(int i = 0; i < l_size; i++){
       int32_t l_index = hash_l_fns[i](flowkey) % n_l_packet;
       light[i][l_index] += num;
@@ -387,7 +387,7 @@ bool ElasticSketch<key_len, T, hash_t>::lookup(const FlowKey<key_len> &flowkey)c
 
 template <int32_t key_len, typename T, typename hash_t>
 T ElasticSketch<key_len, T, hash_t>::query(const FlowKey<key_len> &flowkey)const{
-  int v=querySize(flowkey);
+  int v = querySize(flowkey);
   // if(v>10)
   //   fmt::print("size: {:d}\n",v);
   return v;
@@ -454,7 +454,8 @@ size_t ElasticSketch<key_len, T, hash_t>::size() const {
 
 template <int32_t key_len, typename T, typename hash_t>
 void ElasticSketch<key_len, T, hash_t>::clear(){
-  std::fill(heavy[0], heavy[0] + n_h_packet * sizeof(heavybucket_t<key_len, T>), 0);
+  for (int i = 0; i < n_h_packet, i++)
+    std::fill(heavy[i].packet, heavy[i].packet + h_size * sizeof(heavypacket_t<key_len, T>), 0);
   std::fill(light[0], light[0] + l_size * n_l_packet * sizeof(lightpacket_t), 0);
 }
 
