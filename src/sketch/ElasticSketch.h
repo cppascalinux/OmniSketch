@@ -37,8 +37,8 @@ T sketchSum(const T &x, const T &y){
 
 template<typename array_t>
 void allocMem(int dima, int dimb, array_t**& arr){
-  array_t* mem = new array_t[dima * dimb];
-  arr = new array_t*[dima];
+  array_t* mem = new array_t[dima * dimb]();
+  arr = new array_t*[dima]();
   for (int i = 0; i < dima; i++)
     arr[i] = mem + i * dimb;
 }
@@ -166,7 +166,7 @@ private:
       if (*ptr.flowkey == flowkey)
         return ptr.v_positive + ptr.v_light;
       else
-        return (T)((uint32_t)(queryLightSize(flowkey)))
+        return (T)((uint32_t)(queryLightSize(flowkey)));
     }
   }
   void updateLight(const FlowKey<key_len> &flowkey, lightpacket_t num){
@@ -255,8 +255,8 @@ ElasticSketch<key_len, T, hash_t>::ElasticSketch(int32_t num_h_packet, int32_t n
     n_h_packet(num_h_packet), n_l_packet(num_l_packet),
     h_size(__h_size), l_size(__l_size),
     thre_eject(__thre_eject), thre_elephant(__thre_elephant), n_elephant(0){
-  hash_l_fns = new hash_t[l_size];
-  hash_h_fns = new hash_t[1];
+  hash_l_fns = new hash_t[l_size]();
+  hash_h_fns = new hash_t[1]();
   allocMem(l_size, n_l_packet, light);
   heavy = new heavybucket_t<key_len, T>[n_h_packet]();
   for(int i = 0; i < n_h_packet; i++){
@@ -425,8 +425,8 @@ int32_t ElasticSketch<key_len, T, hash_t>::compress(int32_t new_num_l_packet, bo
   lightpacket_t** new_mem;
   allocMem(l_size, new_num_l_packet, new_mem);
   for (int i = 0; i < l_size; i++){
-    lightpacket_t* arr_old = light[i];
-    lightpacket_t* arr_new = new_mem[i];
+    lightpacket_t* arr_old = light[i]();
+    lightpacket_t* arr_new = new_mem[i]();
     memcpy(arr_new, arr_old, sizeof(lightpacket_t) * new_num_l_packet);
     int round = n_l_packet / new_num_l_packet;
     for (int j = 1; j < round; j++){
@@ -454,7 +454,7 @@ size_t ElasticSketch<key_len, T, hash_t>::size() const {
 
 template <int32_t key_len, typename T, typename hash_t>
 void ElasticSketch<key_len, T, hash_t>::clear(){
-  for (int i = 0; i < n_h_packet, i++)
+  for (int i = 0; i < n_h_packet; i++)
     std::fill(heavy[i].packet, heavy[i].packet + h_size * sizeof(heavypacket_t<key_len, T>), 0);
   std::fill(light[0], light[0] + l_size * n_l_packet * sizeof(lightpacket_t), 0);
 }
